@@ -2,7 +2,7 @@ from django.conf import settings
 from openai import OpenAI
 
 from django.http import HttpResponse
-from .models import Character
+from .models import Character, Interaction, Memory
 from django.http import JsonResponse
 
 
@@ -29,6 +29,26 @@ def talk_to_character(request, character_id):
 
     character = Character.objects.get(id=character_id)
 
+    memory_created = None
+    memory_already_exists = False
+
+    if message.lower().startswith("remember that"):
+        memory_content = message[len("remember that"):].strip()
+
+        existing_memory = Memory.objects.filter(
+            character=character,
+            content__iexact=memory_content,
+        ).first()
+
+        if existing_memory:
+            memory_already_exists = True
+        else:
+            memory_created = Memory.objects.create(
+                character=character,
+                content=memory_content,
+                importance=5,
+            )
+
     memories = character.memories.order_by("-importance", "-created_at")[:3]
 
     memory_text = "\n".join(memory.content for memory in memories)
@@ -51,9 +71,16 @@ def talk_to_character(request, character_id):
         """,
             input=message,
     )
+    Interaction.objects.create(
+        character=character,
+        message=message,
+        response=ai_response.output_text,
+        )
 
     return JsonResponse({
         "character": character.name,
+        "memory_created": memory_created.content if memory_created else None,
+        "memory_already_exists": memory_already_exists,
         "mood": character.mood,
         "message": message,
         "memories_used": [memory.content for memory in memories],
