@@ -73,7 +73,7 @@ def talk_to_character(request, character_id):
     ).order_by("-importance", "-created_at")[:5]
 
     consolidated_memories = character.memories.filter(
-        memory_type=Memory.MemoryType.CONSOLIDATED
+        memory_type=Memory.MemoryType.REM_PHASE
     ).order_by("-created_at")[:3]
 
     memories = list(today_memories) + list(consolidated_memories)
@@ -169,6 +169,19 @@ def run_REM_phase_sleep(request, character_id):
 
     daily_memory_text = "\n".join(m.content for m in today_memories)
 
+    today = date.today()
+
+    existing_rem = character.memories.filter(
+        memory_type=Memory.MemoryType.REM_PHASE,
+        created_at__date=today
+    ).first()
+
+    if existing_rem:
+        return JsonResponse({
+            "status": "REM already done today",
+            "summary": existing_rem.content
+        })
+
     summary = _REM_phase_sleep(character, daily_memory_text)
 
     Memory.objects.create(
@@ -177,12 +190,10 @@ def run_REM_phase_sleep(request, character_id):
         importance=9,
         memory_type=Memory.MemoryType.REM_PHASE,
     )
-
     return JsonResponse({
-        "status": "sleep complete",
+        "status": "REM complete",
         "summary": summary
     })
-
 
 
 def _REM_phase_sleep(character, daily_memory_text):
