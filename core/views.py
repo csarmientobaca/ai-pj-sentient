@@ -195,7 +195,12 @@ def run_REM_phase_sleep(request, character_id):
         "summary": summary
     })
 
-
+"""
+TODO:
+still after the rem sleep and summry the day, if i talk about something that is important but the summary already got
+it repeat in memory. so if in the dayly i say my name carlos. then the summary know my name and then say gain after summary
+it save again.
+"""
 def _REM_phase_sleep(character, daily_memory_text):
     result = client.responses.create(
         model="gpt-4.1-mini",
