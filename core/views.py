@@ -175,7 +175,7 @@ def run_REM_phase_sleep(request, character_id):
         character=character,
         content=summary,
         importance=9,
-        memory_type=Memory.MemoryType.AFTER_REM_PHASE,
+        memory_type=Memory.MemoryType.REM_PHASE,
     )
 
     return JsonResponse({
@@ -189,20 +189,26 @@ def _REM_phase_sleep(character, daily_memory_text):
     result = client.responses.create(
         model="gpt-4.1-mini",
         instructions=f"""
-        You are consolidating memories for {character.name}, like a sleep process.
+    You are consolidating memories for {character.name}, like a REM sleep process.
 
-        Character personality:
-        {character.personality}
+    IMPORTANT:
+    - Do NOT invent new story details.
+    - Do NOT transform the user into a fictional character unless the memories explicitly say that.
+    - Preserve only facts that were actually stated.
+    - If memories contain roleplay or fiction, label them as roleplay/fiction.
+    - Create a concise long-term memory summary for future recall.
 
-        Task:
-        - Read today's memories only.
-        - Create one concise long-term memory summary.
-        - Remove duplicates.
-        - Keep only important facts, relationships, goals, emotional events, or repeated patterns.
-        - Do not include random small talk.
-        - Write in third person.
-        - Keep it short.
-        """,
+    Character personality:
+    {character.personality}
+
+    Task:
+    - Read today's DAILY memories only.
+    - Remove duplicates.
+    - Keep important facts, relationships, goals, emotional events, or repeated patterns.
+    - Do not include random small talk.
+    - Write in third person.
+    - Keep it short and factual.
+    """,
         input=daily_memory_text,
     )
 
