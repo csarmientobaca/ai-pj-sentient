@@ -12,9 +12,21 @@ class Character(models.Model):
 
 
 class Memory(models.Model):
+    class MemoryType(models.TextChoices):
+        DAILY = "daily", "Daily"
+        AFTER_REM_PHASE = "after_rem_phase", "After Rem Phase"
+
+
     character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name="memories")
     content = models.TextField()
     importance = models.IntegerField(default=1)
+    memory_type = models.CharField(
+        max_length=20, 
+        choices=MemoryType.choices, 
+        default=MemoryType.DAILY
+        )
+
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
