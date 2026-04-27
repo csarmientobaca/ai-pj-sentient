@@ -14,7 +14,7 @@ class Character(models.Model):
 class Memory(models.Model):
     class MemoryType(models.TextChoices):
         DAILY = "daily", "Daily"
-        AFTER_REM_PHASE = "after_rem_phase", "After Rem Phase"
+        REM_PHASE = "rem_phase", "REM Phase"
 
 
     character = models.ForeignKey(Character, on_delete=models.CASCADE, related_name="memories")

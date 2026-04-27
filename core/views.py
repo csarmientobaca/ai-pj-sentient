@@ -1,5 +1,6 @@
 import json
 from django.conf import settings
+from datetime import date
 from openai import OpenAI
 
 from django.http import HttpResponse, JsonResponse
@@ -66,8 +67,16 @@ def talk_to_character(request, character_id):
                 importance=memory_importance,
             )
 
-    memories = character.memories.order_by("-importance", "-created_at")[:3]
+    today_memories = character.memories.filter(
+        memory_type=Memory.MemoryType.DAILY,
+        created_at__date=date.today()
+    ).order_by("-importance", "-created_at")[:5]
 
+    consolidated_memories = character.memories.filter(
+        memory_type=Memory.MemoryType.CONSOLIDATED
+    ).order_by("-created_at")[:3]
+
+    memories = list(today_memories) + list(consolidated_memories)
     memory_text = "\n".join(memory.content for memory in memories)
 
     ai_response = client.responses.create(
@@ -147,7 +156,36 @@ def decide_memory(character, message, existing_memory_text):
     return json.loads(result.output_text)
 
 
-def consolidate_daily_memory(character, daily_memory_text):
+def run_REM_phase_sleep(request, character_id):
+    character = Character.objects.get(id=character_id)
+
+    today_memories = character.memories.filter(
+        memory_type=Memory.MemoryType.DAILY,
+        created_at__date=date.today()
+    )
+
+    if not today_memories.exists():
+        return JsonResponse({"status": "no memories today"})
+
+    daily_memory_text = "\n".join(m.content for m in today_memories)
+
+    summary = _REM_phase_sleep(character, daily_memory_text)
+
+    Memory.objects.create(
+        character=character,
+        content=summary,
+        importance=9,
+        memory_type=Memory.MemoryType.AFTER_REM_PHASE,
+    )
+
+    return JsonResponse({
+        "status": "sleep complete",
+        "summary": summary
+    })
+
+
+
+def _REM_phase_sleep(character, daily_memory_text):
     result = client.responses.create(
         model="gpt-4.1-mini",
         instructions=f"""
