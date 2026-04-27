@@ -206,6 +206,8 @@ maybe use a different model for the daily memories.
 maybe use a different model for the rem phase.
 use or 3.5 or the 5.1 mini. to more complex tasks.
 
+play with temperature to see if it can be more concise. make it more creative. etc
+
 """
 
 
