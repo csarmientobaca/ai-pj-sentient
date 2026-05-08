@@ -1,4 +1,7 @@
+import json
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from .models import Character, Interaction
 from .services import ai, memory, sleep
 
@@ -18,8 +21,11 @@ def character_list(request):
     return HttpResponse(html)
 
 
+@csrf_exempt
+@require_POST
 def talk_to_character(request, character_id):
-    message = request.GET.get("message", "")
+    body = json.loads(request.body)
+    message = body.get("message", "")
     character = Character.objects.get(id=character_id)
 
     memory_decision, memory_created, memory_already_exists = memory.process_memory_decision(character, message)
