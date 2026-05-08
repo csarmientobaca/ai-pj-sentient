@@ -182,7 +182,8 @@ def run_REM_phase_sleep(request, character_id):
             "summary": existing_rem.content
         })
 
-    summary = _REM_phase_sleep(character, daily_memory_text)
+    rem_result = _REM_phase_sleep(character, daily_memory_text)
+    summary = rem_result["summary"]
 
     Memory.objects.create(
         character=character,
@@ -192,7 +193,8 @@ def run_REM_phase_sleep(request, character_id):
     )
     return JsonResponse({
         "status": "REM complete",
-        "summary": summary
+        "summary": summary,
+        "important_points": rem_result["important_points"],
     })
 
 """
@@ -217,25 +219,38 @@ def _REM_phase_sleep(character, daily_memory_text):
         instructions=f"""
     You are consolidating memories for {character.name}, like a REM sleep process.
 
-    IMPORTANT:
-    - Do NOT invent new story details.
-    - Do NOT transform the user into a fictional character unless the memories explicitly say that.
-    - Preserve only facts that were actually stated.
-    - If memories contain roleplay or fiction, label them as roleplay/fiction.
-    - Create a concise long-term memory summary for future recall.
+    Create a concise long-term memory summary.
 
-    Character personality:
-    {character.personality}
-
-    Task:
-    - Read today's DAILY memories only.
+    Rules:
+    - Do NOT invent new details.
+    - Preserve only facts actually stated.
+    - If content is roleplay or fiction, label it as roleplay/fiction.
     - Remove duplicates.
     - Keep important facts, relationships, goals, emotional events, or repeated patterns.
-    - Do not include random small talk.
-    - Write in third person.
-    - Keep it short and factual.
+
+    Return only JSON.
     """,
-        input=daily_memory_text,
+        input=daily_memory_text,   
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "rem_memory_summary",
+            "schema": {
+                    "type": "object",
+                    "properties": {
+                        "should_save": {"type": "boolean"},
+                        "summary": {"type": "string"},
+                        "important_points": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                    },
+                    "required": ["should_save", "summary", "important_points"],
+                    "additionalProperties": False,
+                },
+                "strict": True,
+            }
+        },
     )
 
-    return result.output_text
+    return json.loads(result.output_text)
