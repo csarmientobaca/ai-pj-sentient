@@ -45,7 +45,9 @@ def talk_to_character(request, character_id):
             "source": "manual_command",
         }
     else:
-        existing_memories = character.memories.order_by("-importance", "-created_at")[:10]
+        existing_memories = character.memories.exclude(
+            memory_type=Memory.MemoryType.DAILY, is_consolidated=True
+        ).order_by("-importance", "-created_at")[:10]
         existing_memory_text = "\n".join(memory.content for memory in existing_memories)
         
         memory_decision = decide_memory(character, message, existing_memory_text)
@@ -69,7 +71,8 @@ def talk_to_character(request, character_id):
 
     today_memories = character.memories.filter(
         memory_type=Memory.MemoryType.DAILY,
-        created_at__date=date.today()
+        created_at__date=date.today(),
+        is_consolidated=False,
     ).order_by("-importance", "-created_at")[:5]
 
     consolidated_memories = character.memories.filter(
@@ -191,6 +194,9 @@ def run_REM_phase_sleep(request, character_id):
         importance=9,
         memory_type=Memory.MemoryType.REM_PHASE,
     )
+
+    today_memories.update(is_consolidated=True)
+
     return JsonResponse({
         "status": "REM complete",
         "summary": summary,

@@ -27,6 +27,7 @@ class Memory(models.Model):
         )
 
 
+    is_consolidated = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
