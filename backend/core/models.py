@@ -1,7 +1,34 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+TRIAL_INTERACTION_LIMIT = 5
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    openai_api_key = models.CharField(max_length=200, blank=True)
+    trial_interactions_used = models.IntegerField(default=0)
+
+    def has_own_key(self):
+        return bool(self.openai_api_key)
+
+    def trial_remaining(self):
+        return max(0, TRIAL_INTERACTION_LIMIT - self.trial_interactions_used)
+
+    def __str__(self):
+        return f"{self.user.username}'s profile"
+
+
+@receiver(post_save, sender=User)
+def create_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
 
 
 class Character(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="characters", null=True)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     personality = models.TextField(blank=True)

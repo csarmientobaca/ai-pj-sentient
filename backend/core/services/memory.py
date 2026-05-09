@@ -24,7 +24,7 @@ def get_context_memories(character):
     return list(today_memories) + list(consolidated_memories)
 
 
-def process_memory_decision(character, message):
+def process_memory_decision(character, message, api_key=None):
     """
     Decides whether to save a memory for a given message.
     Returns (memory_decision, memory_created, memory_already_exists).
@@ -40,7 +40,7 @@ def process_memory_decision(character, message):
         }
     else:
         existing_memory_text = get_existing_memories_text(character)
-        memory_decision = ai.decide_memory(character, message, existing_memory_text)
+        memory_decision = ai.decide_memory(character, message, existing_memory_text, api_key=api_key)
         memory_content = memory_decision["memory"].strip()
 
     memory_created = None

@@ -3,7 +3,7 @@ from core.models import Memory
 from core.services import ai
 
 
-def run_REM_phase_sleep(character):
+def run_REM_phase_sleep(character, api_key=None):
     """
     Consolidates today's daily memories into a REM_PHASE summary.
     Returns a result dict with status and summary info.
@@ -28,7 +28,7 @@ def run_REM_phase_sleep(character):
         }
 
     daily_memory_text = "\n".join(m.content for m in today_memories)
-    rem_result = ai._REM_phase_sleep(character, daily_memory_text)
+    rem_result = ai._REM_phase_sleep(character, daily_memory_text, api_key=api_key)
     summary = rem_result["summary"]
 
     Memory.objects.create(

@@ -2,10 +2,13 @@ import json
 from django.conf import settings
 from openai import OpenAI
 
-client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
+def _get_client(api_key: str = None) -> OpenAI:
+    return OpenAI(api_key=api_key or settings.OPENAI_API_KEY)
 
 
-def decide_memory(character, message, existing_memory_text):
+def decide_memory(character, message, existing_memory_text, api_key=None):
+    client = _get_client(api_key)
     result = client.responses.create(
         model="gpt-4.1-mini",
         instructions=f"""
@@ -47,7 +50,8 @@ def decide_memory(character, message, existing_memory_text):
     return json.loads(result.output_text)
 
 
-def generate_response(character, message, memory_text):
+def generate_response(character, message, memory_text, api_key=None):
+    client = _get_client(api_key)
     result = client.responses.create(
         model="gpt-4.1-mini",
         instructions=f"""
@@ -69,7 +73,8 @@ def generate_response(character, message, memory_text):
     return result.output_text
 
 
-def _REM_phase_sleep(character, daily_memory_text):
+def _REM_phase_sleep(character, daily_memory_text, api_key=None):
+    client = _get_client(api_key)
     result = client.responses.create(
         model="gpt-4.1-mini",
         instructions=f"""
