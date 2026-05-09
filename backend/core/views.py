@@ -118,6 +118,19 @@ def run_REM_phase_sleep(request, character_id):
     return Response(result)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_profile(request):
+    profile = request.user.profile
+    return Response({
+        "username": request.user.username,
+        "has_own_key": profile.has_own_key(),
+        "trial_interactions_used": profile.trial_interactions_used,
+        "trial_limit": TRIAL_INTERACTION_LIMIT,
+        "trial_remaining": profile.trial_remaining(),
+    })
+
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def set_api_key(request):

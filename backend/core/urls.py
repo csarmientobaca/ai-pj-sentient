@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     register,
+    get_profile,
     character_list,
     create_character,
     talk_to_character,
@@ -10,6 +11,7 @@ from .views import (
 
 urlpatterns = [
     path("auth/register/", register, name="register"),
+    path("auth/profile/", get_profile, name="get_profile"),
     path("auth/api-key/", set_api_key, name="set_api_key"),
     path("characters/", character_list, name="character_list"),
     path("characters/create/", create_character, name="create_character"),
