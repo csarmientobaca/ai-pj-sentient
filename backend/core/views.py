@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .models import Character, Interaction, TRIAL_INTERACTION_LIMIT
+from .models import Character, Interaction, Profile, TRIAL_INTERACTION_LIMIT
 from .services import ai, memory, sleep
 
 
@@ -65,19 +65,21 @@ def talk_to_character(request, character_id):
         return Response({"error": "character not found"}, status=404)
 
     message = request.data.get("message", "")
-    profile = request.user.profile
-
-    if profile.has_own_key():
-        api_key = profile.openai_api_key
-    elif profile.trial_remaining() > 0:
-        api_key = None  # use app key
-        profile.trial_interactions_used += 1
-        profile.save()
+    if request.user.is_staff or request.user.is_superuser:
+        api_key = None  # always use app key, no trial limit
     else:
-        return Response(
-            {"error": f"Trial limit of {TRIAL_INTERACTION_LIMIT} interactions reached. Add your OpenAI API key to continue."},
-            status=402,
-        )
+        profile = request.user.profile
+        if profile.has_own_key():
+            api_key = profile.openai_api_key
+        elif profile.trial_remaining() > 0:
+            api_key = None
+            profile.trial_interactions_used += 1
+            profile.save()
+        else:
+            return Response(
+                {"error": f"Trial limit of {TRIAL_INTERACTION_LIMIT} interactions reached. Add your OpenAI API key to continue."},
+                status=402,
+            )
 
     memory_decision, memory_created, memory_already_exists = memory.process_memory_decision(character, message, api_key=api_key)
 
@@ -112,8 +114,11 @@ def run_REM_phase_sleep(request, character_id):
     except Character.DoesNotExist:
         return Response({"error": "character not found"}, status=404)
 
-    profile = request.user.profile
-    api_key = profile.openai_api_key if profile.has_own_key() else None
+    if request.user.is_staff or request.user.is_superuser:
+        api_key = None
+    else:
+        profile = request.user.profile
+        api_key = profile.openai_api_key if profile.has_own_key() else None
     result = sleep.run_REM_phase_sleep(character, api_key=api_key)
     return Response(result)
 
@@ -121,7 +126,7 @@ def run_REM_phase_sleep(request, character_id):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_profile(request):
-    profile = request.user.profile
+    profile, _ = Profile.objects.get_or_create(user=request.user)
     return Response({
         "username": request.user.username,
         "has_own_key": profile.has_own_key(),
