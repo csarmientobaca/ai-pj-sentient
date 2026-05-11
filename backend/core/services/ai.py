@@ -73,6 +73,50 @@ def generate_response(character, message, memory_text, api_key=None):
     return result.output_text
 
 
+def merge_REM_memories(character, existing_summary, new_daily_text, api_key=None):
+    client = _get_client(api_key)
+    result = client.responses.create(
+        model="gpt-4.1-mini",
+        instructions=f"""
+    You are updating the long-term memory summary for {character.name}.
+
+    You have an existing summary and new information from today.
+    Merge them into one single updated summary.
+
+    Rules:
+    - Do NOT invent new details.
+    - Remove duplicates — if the same fact appears in both, keep it once.
+    - Keep all unique facts from both.
+    - Be concise. One paragraph maximum.
+    - Do NOT lose important facts from the existing summary.
+
+    Return only JSON.
+    """,
+        input=f"EXISTING SUMMARY:\n{existing_summary}\n\nNEW INFORMATION:\n{new_daily_text}",
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "rem_memory_summary",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "should_save": {"type": "boolean"},
+                        "summary": {"type": "string"},
+                        "important_points": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                    },
+                    "required": ["should_save", "summary", "important_points"],
+                    "additionalProperties": False,
+                },
+                "strict": True,
+            }
+        },
+    )
+    return json.loads(result.output_text)
+
+
 def _REM_phase_sleep(character, daily_memory_text, api_key=None):
     client = _get_client(api_key)
     result = client.responses.create(
