@@ -65,16 +65,15 @@ def talk_to_character(request, character_id):
         return Response({"error": "character not found"}, status=404)
 
     message = request.data.get("message", "")
+    profile = None
     if request.user.is_staff or request.user.is_superuser:
-        api_key = None  # always use app key, no trial limit
+        api_key = None
     else:
         profile = request.user.profile
         if profile.has_own_key():
             api_key = profile.openai_api_key
         elif profile.trial_remaining() > 0:
             api_key = None
-            profile.trial_interactions_used += 1
-            profile.save()
         else:
             return Response(
                 {"error": f"Trial limit of {TRIAL_INTERACTION_LIMIT} interactions reached. Add your OpenAI API key to continue."},
@@ -87,6 +86,10 @@ def talk_to_character(request, character_id):
     memory_text = "\n".join(m.content for m in context_memories)
 
     response_text = ai.generate_response(character, message, memory_text, api_key=api_key)
+
+    if profile and not profile.has_own_key():
+        profile.trial_interactions_used += 1
+        profile.save()
 
     Interaction.objects.create(
         character=character,
