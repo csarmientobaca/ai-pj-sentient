@@ -4,7 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-TRIAL_INTERACTION_LIMIT = 5
+TRIAL_INTERACTION_LIMIT = 10
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
