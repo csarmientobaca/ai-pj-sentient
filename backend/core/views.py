@@ -145,6 +145,8 @@ def set_api_key(request):
     api_key = request.data.get("api_key", "").strip()
     if not api_key:
         return Response({"error": "api_key is required"}, status=400)
+    if not api_key.startswith("sk-"):
+        return Response({"error": "Invalid API key format. It must start with 'sk-'."}, status=400)
 
     request.user.profile.openai_api_key = api_key
     request.user.profile.save()

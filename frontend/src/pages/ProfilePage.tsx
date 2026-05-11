@@ -21,6 +21,10 @@ export function ProfilePage() {
     e.preventDefault();
     setError("");
     setSaved(false);
+    if (!apiKey.startsWith("sk-")) {
+      setError("Invalid API key. It must start with 'sk-'.");
+      return;
+    }
     try {
       await saveApiKey(apiKey);
       setSaved(true);
