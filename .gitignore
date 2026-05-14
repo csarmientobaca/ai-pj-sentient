@@ -217,3 +217,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+backend/staticfiles/
+
+# Local dev overrides
+docker-compose.override.yml
