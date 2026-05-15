@@ -159,3 +159,40 @@ def _REM_phase_sleep(character, daily_memory_text, api_key=None):
     )
 
     return json.loads(result.output_text)
+
+
+def generate_character_profile(name: str, api_key: str = None) -> dict:
+    client = _get_client(api_key)
+    result = client.responses.create(
+        model="gpt-4.1-mini",
+        instructions="""
+You are a creative writer who generates rich character profiles for AI roleplay.
+Given a character name, generate a personality and description.
+
+Rules:
+- personality: 2-4 sentences describing how they speak, their tone, quirks, and key traits
+- description: 2-4 sentences describing who they are, their background, and what makes them unique
+- Stay true to the character if they are a known fictional or historical figure
+- If the name is unknown, create an interesting original character
+- Return only JSON with keys: name, personality, description
+""",
+        input=f"Generate a character profile for: {name}",
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "character_profile",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "personality": {"type": "string"},
+                        "description": {"type": "string"},
+                    },
+                    "required": ["name", "personality", "description"],
+                    "additionalProperties": False,
+                },
+                "strict": True,
+            }
+        },
+    )
+    return json.loads(result.output_text)

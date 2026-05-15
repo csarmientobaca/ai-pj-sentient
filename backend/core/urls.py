@@ -7,6 +7,8 @@ from .views import (
     talk_to_character,
     run_REM_phase_sleep,
     set_api_key,
+    get_preset_characters,
+    generate_character,
 )
 
 urlpatterns = [
@@ -15,6 +17,8 @@ urlpatterns = [
     path("auth/api-key/", set_api_key, name="set_api_key"),
     path("characters/", character_list, name="character_list"),
     path("characters/create/", create_character, name="create_character"),
+    path("characters/presets/", get_preset_characters, name="get_preset_characters"),
+    path("characters/generate/", generate_character, name="generate_character"),
     path("characters/<int:character_id>/talk/", talk_to_character, name="talk_to_character"),
     path("characters/<int:character_id>/rem-sleep/", run_REM_phase_sleep, name="run_REM_phase_sleep"),
 ]

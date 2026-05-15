@@ -82,3 +82,13 @@ export async function sendMessage(characterId: number, message: string): Promise
   const { data } = await api.post<ApiResponse>(`/characters/${characterId}/talk/`, { message });
   return data;
 }
+
+export async function getPresetCharacters(): Promise<{ name: string; personality: string; description: string }[]> {
+  const { data } = await api.get("/characters/presets/");
+  return data;
+}
+
+export async function generateCharacter(name: string): Promise<{ name: string; personality: string; description: string }> {
+  const { data } = await api.post("/characters/generate/", { name });
+  return data;
+}
